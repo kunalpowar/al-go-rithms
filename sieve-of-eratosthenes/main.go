@@ -21,27 +21,45 @@ func main() {
 		return
 	}
 
-	marked := new(sync.Map)
+	var (
+		markCh = make(chan int)
+		done   = make(chan bool)
+
+		marked = make(map[int]bool)
+	)
+
 	wg := sync.WaitGroup{}
 
 	for i := 2; i <= *n; i++ {
 		wg.Add(1)
 		go func(num int) {
 			defer wg.Done()
-			mark(num, marked)
+			mark(num, markCh)
 		}(i)
 	}
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case m := <-markCh:
+				marked[m] = true
+			case <-done:
+				break
+			}
+		}
+	}()
 
 	wg.Wait()
 
 	for i := 2; i <= *n; i++ {
-		if _, present := marked.Load(i); !present {
+		if !marked[i] {
 			fmt.Println(i)
 		}
 	}
 }
 
-func mark(num int, markMap *sync.Map) {
+func mark(num int, ch chan int) {
 	i := 2
 	multiple := num * i
 	for {
@@ -49,7 +67,7 @@ func mark(num int, markMap *sync.Map) {
 			break
 		}
 
-		markMap.Store(multiple, true)
+		ch <- multiple
 		i++
 		multiple = num * i
 	}
