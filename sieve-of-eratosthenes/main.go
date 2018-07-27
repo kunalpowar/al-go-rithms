@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-var n = flag.Int("n", 10, "-n=10 print all primes smalled than n")
+var n = flag.Int("n", 10, "-n=10 print all primes smaller than n")
 
 func main() {
 	flag.Parse()
